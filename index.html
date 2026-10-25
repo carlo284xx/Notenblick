@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notenblick</title>
+    <meta name="description" content="Notenblick – Schulnotenübersicht mit Fachnoten, Zielrechner und lokaler Speicherung." />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Oberstufe</p>
+          <h1>Notenblick</h1>
+        </div>
+        <div class="header-actions">
+          <button id="import-btn" class="secondary-btn" type="button">JSON importieren</button>
+          <input id="import-file" type="file" accept="application/json" hidden />
+          <button id="export-btn" class="secondary-btn" type="button">JSON exportieren</button>
+          <button id="add-subject-btn" class="primary-btn" type="button">Fach hinzufügen</button>
+        </div>
+      </header>
+
+      <main class="main-layout">
+        <section class="overview-panel card">
+          <h2>Gesamtübersicht</h2>
+          <div class="summary-grid">
+            <div class="summary-box">
+              <span class="summary-label">Gesamtdurchschnitt</span>
+              <strong id="overall-average">–</strong>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">Fächer</span>
+              <strong id="subject-count">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-header">
+            <h2>Meine Fächer</h2>
+          </div>
+          <div id="subject-list" class="subject-grid" aria-live="polite"></div>
+        </section>
+
+        <section id="detail-panel" class="card detail-panel hidden" aria-live="polite">
+          <div class="detail-toolbar">
+            <div>
+              <p class="eyebrow">Fachdetails</p>
+              <h2 id="detail-subject-name">–</h2>
+            </div>
+            <button id="delete-subject-btn" class="danger-btn" type="button">Fach löschen</button>
+          </div>
+
+          <div class="detail-meta">
+            <div>
+              <span class="meta-label">Fachdurchschnitt</span>
+              <strong id="detail-subject-average">–</strong>
+            </div>
+            <div>
+              <span class="meta-label">Kursarbeiten-Anteil</span>
+              <select id="course-share-select" aria-label="Kursarbeiten-Anteil">
+                <option value="0.333">Ein Drittel</option>
+                <option value="0.5">50 %</option>
+                <option value="1">100 %</option>
+                <option value="0">0 %</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="explanation-box">
+            <h3>So wird gerechnet</h3>
+            <p id="calculation-explanation"></p>
+          </div>
+
+          <div class="form-card">
+            <h3>Leistung erfassen</h3>
+            <form id="assessment-form" class="assessment-form">
+              <input type="hidden" id="assessment-id" />
+              <div class="field-group">
+                <label for="assessment-name">Bezeichnung</label>
+                <input id="assessment-name" name="assessment-name" type="text" maxlength="80" required />
+              </div>
+              <div class="field-row">
+                <div class="field-group">
+                  <label for="assessment-date">Datum</label>
+                  <input id="assessment-date" name="assessment-date" type="date" required />
+                </div>
+                <div class="field-group">
+                  <label for="assessment-points">Punkte</label>
+                  <input id="assessment-points" name="assessment-points" type="number" min="0" max="15" step="0.01" required />
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field-group">
+                  <label for="assessment-type">Leistungsart</label>
+                  <select id="assessment-type" name="assessment-type" required>
+                    <option value="Mündliche Note">Mündliche Note</option>
+                    <option value="Test">Test</option>
+                    <option value="Vortrag">Vortrag</option>
+                    <option value="Vokabeltest">Vokabeltest</option>
+                    <option value="LB-Aufgabe">LB-Aufgabe</option>
+                    <option value="Kursarbeit">Kursarbeit</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label for="assessment-weight">Einzelgewichtung</label>
+                  <select id="assessment-weight" name="assessment-weight" required>
+                    <option value="0">0-fach</option>
+                    <option value="1">1-fach</option>
+                    <option value="2">2-fach</option>
+                    <option value="0.5">0,5-fach</option>
+                    <option value="0.333">0,333-fach</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="primary-btn">Speichern</button>
+                <button type="button" id="cancel-assessment-edit" class="secondary-btn hidden">Abbrechen</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="grades-card">
+            <div class="grades-header">
+              <h3>Leistungen</h3>
+            </div>
+            <div id="assessment-list" class="assessment-list"></div>
+          </div>
+
+          <div class="goal-card">
+            <h3>Zielnoten-Rechner</h3>
+            <form id="goal-form" class="goal-form">
+              <div class="field-row goal-row">
+                <div class="field-group">
+                  <label for="goal-target">Gewünschter Fachschnitt</label>
+                  <input id="goal-target" type="number" min="0" max="15" step="0.01" value="12" required />
+                </div>
+                <div class="field-group">
+                  <label for="goal-type">Art der nächsten Leistung</label>
+                  <select id="goal-type">
+                    <option value="Mündliche Note">Mündliche Note</option>
+                    <option value="Test">Test</option>
+                    <option value="Vortrag">Vortrag</option>
+                    <option value="Vokabeltest">Vokabeltest</option>
+                    <option value="LB-Aufgabe">LB-Aufgabe</option>
+                    <option value="Kursarbeit">Kursarbeit</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label for="goal-weight">Gewichtung</label>
+                  <select id="goal-weight">
+                    <option value="0">0-fach</option>
+                    <option value="1" selected>1-fach</option>
+                    <option value="2">2-fach</option>
+                    <option value="0.5">0,5-fach</option>
+                    <option value="0.333">0,333-fach</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="primary-btn">Berechnen</button>
+              </div>
+            </form>
+            <div id="goal-result" class="goal-result" aria-live="polite"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="subject-modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="subject-modal-title">
+        <div class="modal-header">
+          <h2 id="subject-modal-title">Fach hinzufügen</h2>
+          <button type="button" class="close-btn" id="close-subject-modal" aria-label="Schließen">×</button>
+        </div>
+        <form id="subject-form">
+          <div class="field-group">
+            <label for="subject-name">Fachname</label>
+            <input id="subject-name" name="subject-name" type="text" maxlength="60" required />
+          </div>
+          <div class="field-group">
+            <label for="subject-course-share">Kursarbeiten-Anteil</label>
+            <select id="subject-course-share" name="subject-course-share">
+              <option value="0.333">Ein Drittel</option>
+              <option value="0.5">50 %</option>
+              <option value="1">100 %</option>
+              <option value="0">0 %</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-btn">Speichern</button>
+            <button type="button" id="cancel-subject-modal" class="secondary-btn">Abbrechen</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden" aria-live="assertive"></div>
+
+    <script src="logic.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
